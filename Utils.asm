@@ -7,3 +7,9 @@
 .macro ClearBit(nr) {
     and #($ff ^ (1 << nr))
 }
+
+.macro Store(address, value) {
+  lda #value
+  sta address
+   
+}

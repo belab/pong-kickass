@@ -12,6 +12,8 @@
   .label ExpandY = $d017
   .label ColorMode = $d01c
   .label BackgroundPriority = $d01b
+  .label MultiColor1 = $d025
+  .label MultiColor2 = $d026
 }
 
 .function SpritePage(addr) {
@@ -75,5 +77,5 @@
   sta $d000,x
   lda #y
   sta $d001,x
-  
 }
+

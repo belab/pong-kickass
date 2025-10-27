@@ -2,29 +2,25 @@
 #import "Registers.asm"
 #import "Kernal.asm"
 #import "MemoryMap.asm"
-
+#import "Screen.asm"
 BasicUpstart2(main)
 
 *=GAME_CODE_ADDRESS "Game Code"
 main:
-	// jsr Kernal.CLRSCR
+	jsr Kernal.CLRSCR
 
+    Store(Sprite.MultiColor1, WHITE)
+    Store(Sprite.MultiColor2, RED)
+	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMono, SpriteExpandNo, false)
+	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandNo, false)
+	SpriteActivate(2, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandNo, false)
 
-	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMulti, SpriteExpandXY, false)
-	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMono, SpriteExpandXY, true)
 	SpritePosition(0, 75, 65)
-	SpritePosition(1, 190, 65)
+	SpritePosition(1, 50, 65)
+	SpritePosition(2, 250, 65)
 
-    lda #%00000010  // multicolor 2
-    sta $d01c
-    lda #GREEN
-    sta $d028       // store color
-
-
-    lda #WHITE     // sprite multicolor 1
-    sta $d025
-    lda #RED        // sprite multicolor 2
-    sta $d026
+    Store(Screen.BorderColor, DARK_GRAY)
+    Store(Screen.BackgroundColor, BLACK)
 
 
 loop:
