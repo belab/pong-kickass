@@ -7,47 +7,13 @@ BasicUpstart2(main)
 
 *=GAME_CODE_ADDRESS "Game Code"
 main:
-	jsr Kernal.CLRSCR
-
-    // lda #100
-    // sta $d000       // pos x
-    // sta $d001       // pos y
-
-	// SpriteActivate(0, Sprites.Bat, YELLOW, SpriteColorMono, SpriteExpandY, false)
-
-	// SpritePosition(0, 100, 75)
-	// stb #0:r3L
-	// stb #120:r4L
-	// stb #100:r5L
-	// jsr Sprite.SetPos
+	// jsr Kernal.CLRSCR
 
 
-	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMono, SpriteExpandX, false)
-	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMono, SpriteExpandX, false)
-	// SpritePosition(1, 120, 100)
-
-    // lda Sprite.Active
-    // ora #(1 << 0)
-    // sta Sprite.Active
-    // lda #100
-    // sta $d000       // pos x
-    // sta $d001       // pos x
-
-
-    // lda #SpritePage(Sprites.Ball)
-    // ldx #0
-    // sta Sprite.DataPointers,x
-    // lda Sprite.Active
-    // ora #(1 << 0)
-    // sta Sprite.Active
-    lda #75
-    sta $d000       // pos x
-    sta $d001       // pos y
-    lda #90
-    sta $d002       // pos x
-    sta $d003       // pos y
-
-
+	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMulti, SpriteExpandXY, false)
+	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMono, SpriteExpandXY, true)
+	SpritePosition(0, 75, 65)
+	SpritePosition(1, 190, 65)
 
     lda #%00000010  // multicolor 2
     sta $d01c

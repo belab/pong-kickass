@@ -10,7 +10,8 @@
   .label Colors = $d027
   .label ExpandX = $d01d
   .label ExpandY = $d017
-
+  .label ColorMode = $d01c
+  .label BackgroundPriority = $d01b
 }
 
 .function SpritePage(addr) {
@@ -18,14 +19,61 @@
 }
 
 .enum {SpriteColorMono, SpriteColorMulti}
-.enum {SpriteExpandNO, SpriteExpandX, SpriteExpandY, SpriteExpandXY}
+.enum {SpriteExpandNo, SpriteExpandX, SpriteExpandY, SpriteExpandXY}
+
 .macro SpriteActivate(nr, addr, color, colorMode, expandMode, bgPrio) {
   lda #SpritePage(addr)
   ldx #nr
   sta Sprite.DataPointers,x
   lda Sprite.Active
-  ora #(1 << nr)
+  SetBit(nr)
   sta Sprite.Active
   lda #color
   sta Sprite.Colors,x
+  .if(colorMode == SpriteColorMulti){
+    lda Sprite.ColorMode
+    SetBit( nr )
+    sta Sprite.ColorMode
+  } else {
+    lda Sprite.ColorMode
+    ClearBit( nr )
+    sta Sprite.ColorMode
+  }
+  .if(expandMode == SpriteExpandX || expandMode == SpriteExpandXY){
+    lda Sprite.ExpandX
+    SetBit( nr )
+    sta Sprite.ExpandX
+  } else {
+    lda Sprite.ExpandX
+    ClearBit( nr )
+    sta Sprite.ExpandX
+  }
+  .if(expandMode == SpriteExpandY || expandMode == SpriteExpandXY){
+    lda Sprite.ExpandY
+    SetBit( nr )
+    sta Sprite.ExpandY
+  } else {
+    lda Sprite.ExpandY
+    ClearBit( nr )
+    sta Sprite.ExpandY
+  }
+  .if(bgPrio){
+    lda Sprite.BackgroundPriority
+    SetBit( nr )
+    sta Sprite.BackgroundPriority
+  } else {
+    lda Sprite.BackgroundPriority
+    ClearBit( nr )
+    sta Sprite.BackgroundPriority
+  }
+
+}
+
+.macro SpritePosition(nr, x, y) {
+  ldx #nr*2
+  lda #x
+  sta $d000,x
+  lda #y
+  sta $d001,x
+  
 }
