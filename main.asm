@@ -3,28 +3,47 @@
 #import "Kernal.asm"
 #import "MemoryMap.asm"
 #import "Screen.asm"
+
 BasicUpstart2(main)
 
 *=GAME_CODE_ADDRESS "Game Code"
 main:
+    mov #DARK_GRAY : Screen.BorderColor
+    mov #BLACK : Screen.BackgroundColor
+
 	jsr Kernal.CLRSCR
 
-    Store(Sprite.MultiColor1, WHITE)
-    Store(Sprite.MultiColor2, RED)
+    mov #WHITE : Sprite.MultiColor1
+    mov #RED : Sprite.MultiColor2
+
 	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMono, SpriteExpandNo, false)
 	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandNo, false)
-	SpriteActivate(2, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandNo, false)
+	SpriteActivate(2, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandNo, false)
 
 	SpritePosition(0, 75, 65)
 	SpritePosition(1, 50, 65)
 	SpritePosition(2, 250, 65)
 
-    Store(Screen.BorderColor, DARK_GRAY)
-    Store(Screen.BackgroundColor, BLACK)
-
+	jsr Ball.reset
 
 loop:
 	jmp loop
+
+Ball:{
+	SpeedX: .byte -1
+	SpeedY: .byte 1
+	PosX: .word 255/2
+	PosY: .byte 255/2
+
+	reset:
+
+		mov16 #255/2 : PosX
+		mov #255/2 : PosY
+		SpritePosition(0, 255/2, 255/2)
+		rts
+}
+
+
 
 *=SPRITES_ADDRESS "Sprites"
 Sprites:{
