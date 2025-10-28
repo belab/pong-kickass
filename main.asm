@@ -3,6 +3,8 @@
 #import "Kernal.asm"
 #import "MemoryMap.asm"
 #import "Screen.asm"
+#import "Joystick.asm"
+
 
 BasicUpstart2(main)
 
@@ -20,13 +22,38 @@ main:
 	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandNo, false)
 	SpriteActivate(2, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandNo, false)
 
-	SpritePosition(0, 75, 65)
-	SpritePosition(1, 50, 65)
-	SpritePosition(2, 250, 65)
+	SpritePosition(0, 320/2, 255/2)
+	SpritePosition(1, 19, 255/2)
+	SpritePosition(2, 326, 255/2)
 
 	jsr Ball.reset
 
 loop:
+	ldx #0
+slowDownLoop:
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
+	inx
+	cpx #255
+	bne slowDownLoop
+
+
+	JoystickUp()
+	bne joyDown
+	dec $d003
+joyDown:
+	JoystickDown()
+	bne joyEnd
+	inc $d003
+joyEnd:
+
 	jmp loop
 
 Ball:{
@@ -36,10 +63,9 @@ Ball:{
 	PosY: .byte 255/2
 
 	reset:
-
 		mov16 #255/2 : PosX
 		mov #255/2 : PosY
-		SpritePosition(0, 255/2, 255/2)
+		SpritePosition(0, 330/2, 255/2)
 		rts
 }
 

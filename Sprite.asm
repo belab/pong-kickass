@@ -80,10 +80,6 @@
     sta Sprite.PosXHiBit
   }
   mov #posY : $d001+nr*2
-  // ldx #nr*2
-  // lda #posX
-  // sta $d000,x
-  // lda #y
-  // sta $d001,x
 }
+
 
