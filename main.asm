@@ -5,6 +5,14 @@
 #import "Screen.asm"
 #import "Joystick.asm"
 
+.namespace Player1 {
+	.label SpriteNr = 1
+	.label PosY = Sprite.Positions + SpriteNr * 2 + 1
+}
+.namespace Player2 {
+	.label SpriteNr = 2
+	.label PosY = Sprite.Positions + SpriteNr * 2 + 1
+}
 
 BasicUpstart2(main)
 
@@ -47,22 +55,22 @@ slowDownLoop:
 {
 	Joystick1Up()
 	bne joyDown
-	dec $d003
+	dec Player1.PosY
 joyDown:
 	Joystick1Down()
 	bne joyEnd
-	inc $d003
+	inc Player1.PosY
 joyEnd:
 }
 
 {
 	Joystick2Up()
 	bne joyDown
-	dec $d005
+	dec Player2.PosY
 joyDown:
 	Joystick2Down()
 	bne joyEnd
-	inc $d005
+	inc Player2.PosY
 joyEnd:
 }
 

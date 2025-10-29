@@ -14,7 +14,8 @@
   .label BackgroundPriority = $d01b
   .label MultiColor1 = $d025
   .label MultiColor2 = $d026
-  .label PosXHiBit = $d010
+  .label PosXHiBits = $d010
+  .label Positions = $d000
 }
 
 .function SpritePage(addr) {
@@ -73,13 +74,13 @@
 }
 
 .macro SpritePosition(nr, posX, posY) {
-  mov #posX : $d000+nr*2
+  mov #posX : Sprite.Positions +nr*2
   .if(posX > $FF) {
-    lda Sprite.PosXHiBit
+    lda Sprite.PosXHiBits
     SetBit(nr)
-    sta Sprite.PosXHiBit
+    sta Sprite.PosXHiBits
   }
-  mov #posY : $d001+nr*2
+  mov #posY : Sprite.Positions+1+nr*2
 }
 
 
