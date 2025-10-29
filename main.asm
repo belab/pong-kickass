@@ -19,8 +19,8 @@ main:
     mov #RED : Sprite.MultiColor2
 
 	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMono, SpriteExpandNo, false)
-	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandNo, false)
-	SpriteActivate(2, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandNo, false)
+	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandY, false)
+	SpriteActivate(2, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandY, false)
 
 	SpritePosition(0, 320/2, 255/2)
 	SpritePosition(1, 19, 255/2)
@@ -44,15 +44,27 @@ slowDownLoop:
 	cpx #255
 	bne slowDownLoop
 
-
-	JoystickUp()
+{
+	Joystick1Up()
 	bne joyDown
 	dec $d003
 joyDown:
-	JoystickDown()
+	Joystick1Down()
 	bne joyEnd
 	inc $d003
 joyEnd:
+}
+
+{
+	Joystick2Up()
+	bne joyDown
+	dec $d005
+joyDown:
+	Joystick2Down()
+	bne joyEnd
+	inc $d005
+joyEnd:
+}
 
 	jmp loop
 

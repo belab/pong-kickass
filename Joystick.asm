@@ -28,25 +28,47 @@
     .label Fire = $10
 }
 
-.macro JoystickUp() {
+.macro Joystick1Up() {
     lda Joystick.PortA
     and #Joystick.Up
 }
-.macro JoystickDown() {
+.macro Joystick1Down() {
     lda Joystick.PortA
     and #Joystick.Down
 }
-.macro JoystickLeft() {
+.macro Joystick1Left() {
     lda Joystick.PortA
     and #Joystick.Left
 }
 
-.macro JoystickRight() {
+.macro Joystick1Right() {
     lda Joystick.PortA
     and #Joystick.Right
 }
-.macro JoystickFire() {
+.macro Joystick1Fire() {
     lda Joystick.PortA
+    and #Joystick.Fire
+}
+
+.macro Joystick2Up() {
+    lda Joystick.PortB
+    and #Joystick.Up
+}
+.macro Joystick2Down() {
+    lda Joystick.PortB
+    and #Joystick.Down
+}
+.macro Joystick2Left() {
+    lda Joystick.PortB
+    and #Joystick.Left
+}
+
+.macro Joystick2Right() {
+    lda Joystick.PortB
+    and #Joystick.Right
+}
+.macro Joystick2Fire() {
+    lda Joystick.PortB
     and #Joystick.Fire
 }
 
