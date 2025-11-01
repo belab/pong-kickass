@@ -94,21 +94,34 @@ noBounceY:
 
 		lda DirectionX
 		bne toRight
-		inc PosX
+
+		inc16 PosX
 		jmp movSpriteX
 toRight:
-		dec PosX
+		dec16 PosX
 movSpriteX:
 		mov PosX : Sprite.Positions
-
+		lda PosX + 1
+		bne !+
+		lda Sprite.PosXHiBits
+		ClearBit(0)
+		sta Sprite.PosXHiBits
+		jmp checkLeftX
+!:
+		lda Sprite.PosXHiBits
+		SetBit(0)
+		sta Sprite.PosXHiBits
 		lda PosX
-		cmp #255
+		cmp #325-255
 		bne checkLeftX
 		lda #1
 		sta DirectionX
 		jmp noBounceX
 
 checkLeftX:
+		lda PosX +1
+		bne noBounceX
+		lda PosX
 		cmp #Border.LEFT
 		bne	noBounceX
 		lda #0
@@ -140,25 +153,6 @@ joyDown:
 	bne joyEnd
 	inc P2.PosY
 joyEnd:
-	rts
-}
-
-SlowDownLoop:
-{
-	ldx #0
-loop:
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-
-	inx
-	cpx #255
-	bne loop
 	rts
 }
 

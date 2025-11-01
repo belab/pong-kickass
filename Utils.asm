@@ -39,6 +39,15 @@
 over:
 }
 
+.pseudocommand dec16 arg {
+    lda arg
+    bne skip
+    dec _16bitnextArgument(arg)
+skip:
+    dec arg    
+}
+
+
 .pseudocommand add16 arg1 : arg2 : tar {
     .if (tar.getType()==AT_NONE) .eval tar=arg1
     clc
