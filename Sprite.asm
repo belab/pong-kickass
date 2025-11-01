@@ -83,4 +83,3 @@
   mov #posY : Sprite.Positions+1+nr*2
 }
 
-

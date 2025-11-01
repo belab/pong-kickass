@@ -38,3 +38,14 @@
     inc _16bitnextArgument(arg)
 over:
 }
+
+.pseudocommand add16 arg1 : arg2 : tar {
+    .if (tar.getType()==AT_NONE) .eval tar=arg1
+    clc
+    lda arg1
+    adc arg2
+    sta tar
+    lda _16bitnextArgument(arg1)
+    adc _16bitnextArgument(arg2)
+    sta _16bitnextArgument(tar)
+}

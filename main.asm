@@ -5,14 +5,13 @@
 #import "Screen.asm"
 #import "Joystick.asm"
 
-.namespace Player1 {
-	.label SpriteNr = 1
-	.label PosY = Sprite.Positions + SpriteNr * 2 + 1
+.struct Player{
+	JoystickPort,
+	SpriteNr,
+	PosY
 }
-.namespace Player2 {
-	.label SpriteNr = 2
-	.label PosY = Sprite.Positions + SpriteNr * 2 + 1
-}
+.var P1 = Player(Joystick.PortA, 1, Sprite.Positions + 1 * 2 + 1)
+.var P2 = Player(Joystick.PortB, 2, Sprite.Positions + 2 * 2 + 1)
 
 BasicUpstart2(main)
 
@@ -27,18 +26,126 @@ main:
     mov #RED : Sprite.MultiColor2
 
 	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMono, SpriteExpandNo, false)
-	SpriteActivate(1, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandY, false)
-	SpriteActivate(2, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandY, false)
+	SpriteActivate(P1.SpriteNr, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandY, false)
+	SpriteActivate(P2.SpriteNr, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandY, false)
 
 	SpritePosition(0, 320/2, 255/2)
 	SpritePosition(1, 19, 255/2)
 	SpritePosition(2, 326, 255/2)
 
+	lda Sprite.Active
+	SetBit(3)
+	sta Sprite.Active
+	SpritePosition(3, 24, 229)
+	lda Sprite.ColorMode
+    ClearBit(3)
+    sta Sprite.ColorMode
+
 	jsr Ball.reset
 
 loop:
+	lda Screen.RasterLine
+	cmp #250
+	bne loop
+	jsr UpdatePlayers
+	jsr SlowDownLoop
+	jsr Ball.update
+	jmp loop
+
+Ball:{
+	SpeedX: .byte 0
+	SpeedY: .byte 0
+//  .printnow "PosX=$" + toHexString(PosX)
+// .printnow "PosY=$" + toHexString(PosY)
+	PosX: .word 255/2
+	PosY: .byte 255/2
+
+	reset:
+		mov16 #255/2 : PosX
+		mov #255/2 : PosY
+		SpritePosition(0, 330/2, 255/2)
+		rts
+
+	update:
+
+		lda SpeedY
+		bne toDown
+		inc PosY
+		jmp movSpriteY
+toDown:
+		dec PosY
+movSpriteY:
+		mov PosY : Sprite.Positions+1
+
+		lda PosY
+		cmp #Screen.Height+30
+		bne checkTopY
+		lda #1
+		sta SpeedY
+		jmp noBounceY
+
+checkTopY:
+		cmp #30
+		bne	noBounceY
+		lda #0
+		sta SpeedY
+noBounceY:
+
+		lda SpeedX
+		bne toRight
+		inc PosX
+		jmp movSpriteX
+toRight:
+		dec PosX
+movSpriteX:
+		mov PosX : Sprite.Positions
+
+		lda PosX
+		cmp #255
+		bne checkLeftX
+		lda #1
+		sta SpeedX
+		jmp noBounceX
+
+checkLeftX:
+		cmp #0
+		bne	noBounceX
+		lda #0
+		sta SpeedX
+noBounceX:
+
+
+		rts
+}
+
+UpdatePlayers:
+{
+	JoystickUp(P1.JoystickPort)
+	bne joyDown
+	dec P1.PosY
+joyDown:
+	JoystickDown(P1.JoystickPort)
+	bne joyEnd
+	inc P1.PosY
+joyEnd:
+}
+
+{
+	JoystickUp(P2.JoystickPort)
+	bne joyDown
+	dec P2.PosY
+joyDown:
+	JoystickDown(P2.JoystickPort)
+	bne joyEnd
+	inc P2.PosY
+joyEnd:
+	rts
+}
+
+SlowDownLoop:
+{
 	ldx #0
-slowDownLoop:
+loop:
 	nop
 	nop
 	nop
@@ -50,45 +157,9 @@ slowDownLoop:
 
 	inx
 	cpx #255
-	bne slowDownLoop
-
-{
-	Joystick1Up()
-	bne joyDown
-	dec Player1.PosY
-joyDown:
-	Joystick1Down()
-	bne joyEnd
-	inc Player1.PosY
-joyEnd:
+	bne loop
+	rts
 }
-
-{
-	Joystick2Up()
-	bne joyDown
-	dec Player2.PosY
-joyDown:
-	Joystick2Down()
-	bne joyEnd
-	inc Player2.PosY
-joyEnd:
-}
-
-	jmp loop
-
-Ball:{
-	SpeedX: .byte -1
-	SpeedY: .byte 1
-	PosX: .word 255/2
-	PosY: .byte 255/2
-
-	reset:
-		mov16 #255/2 : PosX
-		mov #255/2 : PosY
-		SpritePosition(0, 330/2, 255/2)
-		rts
-}
-
 
 
 *=SPRITES_ADDRESS "Sprites"

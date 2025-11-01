@@ -5,4 +5,5 @@
   .label Height = 200
   .label BorderColor = $d020
   .label BackgroundColor = $d021
+  .label RasterLine = $d012
 }

@@ -28,47 +28,16 @@
     .label Fire = $10
 }
 
-.macro Joystick1Up() {
-    lda Joystick.PortA
+.macro JoystickUp(portAddr) {
+    lda portAddr
     and #Joystick.Up
 }
-.macro Joystick1Down() {
-    lda Joystick.PortA
+.macro JoystickDown(portAddr) {
+    lda portAddr
     and #Joystick.Down
 }
-.macro Joystick1Left() {
+.macro JoystickFire(portAddr) {
     lda Joystick.PortA
-    and #Joystick.Left
-}
-
-.macro Joystick1Right() {
-    lda Joystick.PortA
-    and #Joystick.Right
-}
-.macro Joystick1Fire() {
-    lda Joystick.PortA
-    and #Joystick.Fire
-}
-
-.macro Joystick2Up() {
-    lda Joystick.PortB
-    and #Joystick.Up
-}
-.macro Joystick2Down() {
-    lda Joystick.PortB
-    and #Joystick.Down
-}
-.macro Joystick2Left() {
-    lda Joystick.PortB
-    and #Joystick.Left
-}
-
-.macro Joystick2Right() {
-    lda Joystick.PortB
-    and #Joystick.Right
-}
-.macro Joystick2Fire() {
-    lda Joystick.PortB
     and #Joystick.Fire
 }
 
