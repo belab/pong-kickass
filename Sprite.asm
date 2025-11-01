@@ -1,6 +1,7 @@
 #importonce
 
 #import "Utils.asm"
+#import "Registers.asm"
 
 *=* "Sprite Routines"
 
@@ -102,3 +103,15 @@
   mov #posY : Sprite.Positions+1+nr*2
 }
 
+// r0 : posX
+// r1L: posY
+.macro SpritePositionReg(nr) {
+  mov r0L : Sprite.Positions +nr*2
+  lda r0H
+  bne setPosY
+  lda Sprite.PosXHiBits
+  SetBit(nr)
+  sta Sprite.PosXHiBits
+setPosY:
+  mov r1L : Sprite.Positions+1+nr*2
+}
