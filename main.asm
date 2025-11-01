@@ -1,9 +1,11 @@
+*=LIBRARIES_ADDRESS "Libraries"
 #import "Sprite.asm"
 #import "Registers.asm"
 #import "Kernal.asm"
 #import "MemoryMap.asm"
 #import "Screen.asm"
 #import "Joystick.asm"
+#import "System.asm"
 
 .struct Player{
 	JoystickPort,
@@ -12,6 +14,13 @@
 }
 .var P1 = Player(Joystick.PortA, 1, Sprite.Positions + 1 * 2 + 1)
 .var P2 = Player(Joystick.PortB, 2, Sprite.Positions + 2 * 2 + 1)
+
+.namespace Border {
+	.label LEFT = 20
+	.label RIGHT = 325
+	.label TOP = 48
+	.label BOTTOM = 234
+}
 
 BasicUpstart2(main)
 
@@ -29,46 +38,38 @@ main:
 	SpriteActivate(P1.SpriteNr, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandY, false)
 	SpriteActivate(P2.SpriteNr, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandY, false)
 
-	SpritePosition(0, 320/2, 255/2)
+	// SpritePosition(0, 20, 48) // top left
+	// SpritePosition(0, 20, 234) // bottom left
+	// SpritePosition(0, 325, 48) // top right
+	// SpritePosition(0, 325, 234) // top right
+	SpritePosition(0, 170, 138) // middle
 	SpritePosition(1, 19, 255/2)
 	SpritePosition(2, 326, 255/2)
 
-	lda Sprite.Active
-	SetBit(3)
-	sta Sprite.Active
-	SpritePosition(3, 24, 229)
-	lda Sprite.ColorMode
-    ClearBit(3)
-    sta Sprite.ColorMode
-
 	jsr Ball.reset
 
+	jsr System.setupRasterInterrupt
+
 loop:
-	lda Screen.RasterLine
-	cmp #250
-	bne loop
-	jsr UpdatePlayers
-	jsr SlowDownLoop
-	jsr Ball.update
 	jmp loop
 
 Ball:{
-	SpeedX: .byte 0
-	SpeedY: .byte 0
+	DirectionX: .byte 0
+	DirectionY: .byte 0
 //  .printnow "PosX=$" + toHexString(PosX)
 // .printnow "PosY=$" + toHexString(PosY)
-	PosX: .word 255/2
-	PosY: .byte 255/2
+	PosX: .word 170
+	PosY: .byte 138
 
 	reset:
-		mov16 #255/2 : PosX
-		mov #255/2 : PosY
-		SpritePosition(0, 330/2, 255/2)
+		mov16 #170 : PosX
+		mov #138 : PosY
+		SpritePosition(0, 170, 138)
 		rts
 
 	update:
 
-		lda SpeedY
+		lda DirectionY
 		bne toDown
 		inc PosY
 		jmp movSpriteY
@@ -78,20 +79,20 @@ movSpriteY:
 		mov PosY : Sprite.Positions+1
 
 		lda PosY
-		cmp #Screen.Height+30
+		cmp #Border.BOTTOM
 		bne checkTopY
 		lda #1
-		sta SpeedY
+		sta DirectionY
 		jmp noBounceY
 
 checkTopY:
-		cmp #30
+		cmp #Border.TOP
 		bne	noBounceY
 		lda #0
-		sta SpeedY
+		sta DirectionY
 noBounceY:
 
-		lda SpeedX
+		lda DirectionX
 		bne toRight
 		inc PosX
 		jmp movSpriteX
@@ -104,14 +105,14 @@ movSpriteX:
 		cmp #255
 		bne checkLeftX
 		lda #1
-		sta SpeedX
+		sta DirectionX
 		jmp noBounceX
 
 checkLeftX:
-		cmp #0
+		cmp #Border.LEFT
 		bne	noBounceX
 		lda #0
-		sta SpeedX
+		sta DirectionX
 noBounceX:
 
 
