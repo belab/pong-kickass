@@ -58,6 +58,7 @@ Ball:{
 	.label DIRECTION_LEFT = 1
 	.label DIRECTION_DOWN = 0
 	.label DIRECTION_UP = 1
+	.label Speed = 2
 	DirectionX: .byte DIRECTION_RIGHT
 	DirectionY: .byte DIRECTION_DOWN
 //  .printnow "PosX=$" + toHexString(PosX)
@@ -74,19 +75,35 @@ Ball:{
 
 	update:{
 		lda DirectionY
-		bne toDown
-		inc PosY
-		jmp moveOnX
-	toDown:
-		dec PosY
+		bne stepDown
+		lda PosY
+        clc
+        adc #Speed
+        sta PosY
+		jmp checkBottomEdge
+	stepDown:
+		lda PosY
+		sec
+		sbc #Speed
+		sta PosY
+	checkBottomEdge:
+		lda PosY
+		cmp #Border.BOTTOM
+		bne checkTopEdge
+		mov #DIRECTION_UP : DirectionY
+		jmp moveHorizontal
+	checkTopEdge:
+		cmp #Border.TOP
+		bne	moveHorizontal
+		mov #DIRECTION_DOWN : DirectionY
 
-	moveOnX:
+	moveHorizontal:
 		lda DirectionX
 		bne checkLeftBat
 		TestBitAt(2, Sprite.Collisions)	// check collision with right bat
 		beq stepRight
 		mov #DIRECTION_LEFT : DirectionX	// change dir to left
-		dec16 PosX
+		dec16 PosX						// <==
 		jmp updateSprite
 	stepRight:
 		inc16 PosX						// ==>
@@ -101,20 +118,26 @@ Ball:{
 		dec16 PosX						// <==
 		jmp checkLeftEdge
 	checkRightEdge:
+		TestBitAt(0, Sprite.PosXHiBits)
+		beq updateSprite				// in left region, no right border check
 		lda PosX
 		cmp #325-255					// low-byte when at right edge
 		bne updateSprite
 		inc P1Score
+		mov #4 : FlashFrames            // flash for next x frames
 		jsr Ball.reset
 		jmp updateSprite
 	checkLeftEdge:
+		TestBitAt(0, Sprite.PosXHiBits)
+		bne updateSprite				// in right region, no left border check
 		lda PosX
 		cmp #Border.LEFT
 		bne updateSprite
 		inc P2Score
+		mov #4 : FlashFrames            // flash for next x frames
 		jsr Ball.reset
 	updateSprite:
-		// mov PosY : Sprite.Positions + 1
+		mov PosY : Sprite.Positions + 1
 		mov PosX : Sprite.Positions
 		lda PosX + 1
 		bne setXHigh					// if high byte != 0, in right region
@@ -123,99 +146,21 @@ Ball:{
 	setXHigh:
 		SetBitAt(0, Sprite.PosXHiBits)
 	done:
+		// handle border flash counter per-frame
+		lda FlashFrames
+		beq noFlash
+		dec FlashFrames                  // consume one frame, keep flash this frame
+		inc Screen.BorderColor
+		jmp flashDone
+	noFlash:
+		mov #DARK_GRAY : Screen.BorderColor
+	flashDone:
+		mov P1Score : Screen.Content + 10
+		mov P2Score : Screen.Content + 30
 		rts
 	}
-
-// 	update:{
-// 		lda DirectionY
-// 		bne toDown
-// 		inc PosY
-// 		jmp movSpriteY
-// 	toDown:
-// 		dec PosY
-// 	movSpriteY:
-// 		mov PosY : Sprite.Positions+1
-
-// 		lda PosY
-// 		cmp #Border.BOTTOM
-// 		bne checkTopY
-// 		mov #DIRECTION_UP : DirectionY
-// 		jmp noBounceY
-
-// 	checkTopY:
-// 		cmp #Border.TOP
-// 		bne	noBounceY
-// 		mov #DIRECTION_DOWN : DirectionY
-// 	noBounceY:
-
-// // Ball horizontal movement and collision logic
-// 		lda DirectionX
-// 		bne moveLeft              // DirectionX != 0 → moving left
-// 		inc16 PosX                // move right
-// 		jmp movSpriteX
-// 	moveLeft:
-// 		dec16 PosX                // move left
-
-// // Update sprite X position registers
-// movSpriteX:
-//         mov PosX : Sprite.Positions
-//         lda PosX + 1
-//         bne checkRightX           // if high byte != 0, in right region
-//         ClearBitAt(0, Sprite.PosXHiBits)
-//         jmp checkLeftX
-
-// // Check for right wall or paddle 2 collision
-// checkRightX:
-//         TestBitAt(2, Sprite.Collisions)
-//         bne bounceRight           // if collision bit set, reflect
-
-//         SetBitAt(0, Sprite.PosXHiBits)
-
-//         // --- NEW: check direction before testing border scoring ---
-//         lda DirectionX
-//         bne checkLeftX            // if moving left, skip right-bound test
-
-//         lda PosX
-//         cmp #325-255              // low-byte when at right edge
-//         bne checkLeftX
-
-//         // Ball crossed right border → Player 1 scores
-//         inc P1Score
-//         jsr Ball.reset
-
-// // Reflect ball from right side (Player 2 paddle)
-// bounceRight:
-// 		mov #DIRECTION_LEFT : DirectionX
-//         jmp noBounceX
-
-// // Check for left wall or paddle 1 collision
-// checkLeftX:
-//         TestBitAt(1, Sprite.Collisions)
-//         bne bounceLeft           // if collision bit set, reflect
-
-//         lda PosX
-//         cmp #Border.LEFT
-//         bne noBounceX
-
-//         // --- NEW: check direction before testing border scoring ---
-//         lda DirectionX
-//         beq noBounceX             // if moving right, skip left-bound test
-
-//         // Ball crossed left border → Player 2 scores
-//         inc P2Score
-//         jsr Ball.reset
-// bounceLeft:
-//         mov #DIRECTION_RIGHT : DirectionX                    // change dir → right
-
-// // End of horizontal movement update
-// noBounceX:
-//         mov P1Score : Screen.Content + 10
-//         mov P2Score : Screen.Content + 30
-//         rts
-
-// 	}
 }
-
+FlashFrames: .byte 0
 P1Score: .byte '0'
 P2Score: .byte '0'
 
