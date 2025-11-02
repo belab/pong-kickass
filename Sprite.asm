@@ -17,6 +17,7 @@
   .label MultiColor2 = $d026
   .label PosXHiBits = $d010
   .label Positions = $d000
+  .label Collisions = $d01E
 
 // x  : spriteNr
 // r0 : posX
@@ -49,46 +50,28 @@
   lda #SpritePage(addr)
   ldx #nr
   sta Sprite.DataPointers,x
-  lda Sprite.Active
-  SetBit(nr)
-  sta Sprite.Active
+  SetBitAt(nr, Sprite.Active)
   lda #color
   sta Sprite.Colors,x
   .if(colorMode == SpriteColorMulti){
-    lda Sprite.ColorMode
-    SetBit( nr )
-    sta Sprite.ColorMode
+    SetBitAt(nr, Sprite.ColorMode)
   } else {
-    lda Sprite.ColorMode
-    ClearBit( nr )
-    sta Sprite.ColorMode
+    ClearBitAt(nr, Sprite.ColorMode)
   }
   .if(expandMode == SpriteExpandX || expandMode == SpriteExpandXY){
-    lda Sprite.ExpandX
-    SetBit( nr )
-    sta Sprite.ExpandX
+    SetBitAt(nr, Sprite.ExpandX)
   } else {
-    lda Sprite.ExpandX
-    ClearBit( nr )
-    sta Sprite.ExpandX
+    ClearBitAt(nr, Sprite.ExpandX)
   }
   .if(expandMode == SpriteExpandY || expandMode == SpriteExpandXY){
-    lda Sprite.ExpandY
-    SetBit( nr )
-    sta Sprite.ExpandY
+    SetBitAt(nr, Sprite.ExpandY)
   } else {
-    lda Sprite.ExpandY
-    ClearBit( nr )
-    sta Sprite.ExpandY
+    ClearBitAt(nr, Sprite.ExpandY)
   }
   .if(bgPrio){
-    lda Sprite.BackgroundPriority
-    SetBit( nr )
-    sta Sprite.BackgroundPriority
+    SetBitAt(nr, Sprite.BackgroundPriority)
   } else {
-    lda Sprite.BackgroundPriority
-    ClearBit( nr )
-    sta Sprite.BackgroundPriority
+    ClearBitAt(nr, Sprite.BackgroundPriority)
   }
 
 }
@@ -96,9 +79,7 @@
 .macro SpritePosition(nr, posX, posY) {
   mov #posX : Sprite.Positions +nr*2
   .if(posX > $FF) {
-    lda Sprite.PosXHiBits
-    SetBit(nr)
-    sta Sprite.PosXHiBits
+    SetBitAt(nr, Sprite.PosXHiBits)
   }
   mov #posY : Sprite.Positions+1+nr*2
 }
@@ -109,9 +90,7 @@
   mov r0L : Sprite.Positions +nr*2
   lda r0H
   bne setPosY
-  lda Sprite.PosXHiBits
-  SetBit(nr)
-  sta Sprite.PosXHiBits
+  SetBitAt(nr, Sprite.PosXHiBits)
 setPosY:
   mov r1L : Sprite.Positions+1+nr*2
 }

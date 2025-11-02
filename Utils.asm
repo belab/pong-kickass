@@ -4,8 +4,29 @@
     ora #(1 << nr)
 }
 
+.macro SetBitAt(nr, addr) {
+    lda addr
+    SetBit(nr)
+    sta addr
+}
+
 .macro ClearBit(nr) {
     and #($ff ^ (1 << nr))
+}
+
+.macro ClearBitAt(nr, addr) {
+    lda addr
+    ClearBit(nr)
+    sta addr
+}
+
+.macro TestBit(nr) {
+    and #(1 << nr)
+}
+
+.macro TestBitAt(nr, addr) {
+    lda addr
+    and #(1 << nr)
 }
 
 .function _16bitnextArgument(arg) {

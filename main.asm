@@ -54,83 +54,170 @@ loop:
 	jmp loop
 
 Ball:{
-	DirectionX: .byte 0
-	DirectionY: .byte 0
+	.label DIRECTION_RIGHT = 0
+	.label DIRECTION_LEFT = 1
+	.label DIRECTION_DOWN = 0
+	.label DIRECTION_UP = 1
+	DirectionX: .byte DIRECTION_RIGHT
+	DirectionY: .byte DIRECTION_DOWN
 //  .printnow "PosX=$" + toHexString(PosX)
 // .printnow "PosY=$" + toHexString(PosY)
 	PosX: .word 170
 	PosY: .byte 138
 
-	reset:
+	reset:{
 		mov16 #170 : PosX
 		mov #138 : PosY
 		SpritePosition(0, 170, 138)
 		rts
+	}
 
-	update:
-
+	update:{
 		lda DirectionY
 		bne toDown
 		inc PosY
-		jmp movSpriteY
-toDown:
+		jmp moveOnX
+	toDown:
 		dec PosY
-movSpriteY:
-		mov PosY : Sprite.Positions+1
 
-		lda PosY
-		cmp #Border.BOTTOM
-		bne checkTopY
-		lda #1
-		sta DirectionY
-		jmp noBounceY
-
-checkTopY:
-		cmp #Border.TOP
-		bne	noBounceY
-		lda #0
-		sta DirectionY
-noBounceY:
-
+	moveOnX:
 		lda DirectionX
-		bne toRight
-
-		inc16 PosX
-		jmp movSpriteX
-toRight:
+		bne checkLeftBat
+		TestBitAt(2, Sprite.Collisions)	// check collision with right bat
+		beq stepRight
+		mov #DIRECTION_LEFT : DirectionX	// change dir to left
 		dec16 PosX
-movSpriteX:
-		mov PosX : Sprite.Positions
-		lda PosX + 1
-		bne !+
-		lda Sprite.PosXHiBits
-		ClearBit(0)
-		sta Sprite.PosXHiBits
-		jmp checkLeftX
-!:
-		lda Sprite.PosXHiBits
-		SetBit(0)
-		sta Sprite.PosXHiBits
+		jmp updateSprite
+	stepRight:
+		inc16 PosX						// ==>
+		jmp checkRightEdge
+	checkLeftBat:
+		TestBitAt(1, Sprite.Collisions)	// check collision with left bat
+		beq stepLeft
+		mov #DIRECTION_RIGHT : DirectionX
+		inc16 PosX						// ==>
+		jmp updateSprite
+	stepLeft:
+		dec16 PosX						// <==
+		jmp checkLeftEdge
+	checkRightEdge:
 		lda PosX
-		cmp #325-255
-		bne checkLeftX
-		lda #1
-		sta DirectionX
-		jmp noBounceX
-
-checkLeftX:
-		lda PosX +1
-		bne noBounceX
+		cmp #325-255					// low-byte when at right edge
+		bne updateSprite
+		inc P1Score
+		jsr Ball.reset
+		jmp updateSprite
+	checkLeftEdge:
 		lda PosX
 		cmp #Border.LEFT
-		bne	noBounceX
-		lda #0
-		sta DirectionX
-noBounceX:
-
-
+		bne updateSprite
+		inc P2Score
+		jsr Ball.reset
+	updateSprite:
+		// mov PosY : Sprite.Positions + 1
+		mov PosX : Sprite.Positions
+		lda PosX + 1
+		bne setXHigh					// if high byte != 0, in right region
+		ClearBitAt(0, Sprite.PosXHiBits)
+		jmp done
+	setXHigh:
+		SetBitAt(0, Sprite.PosXHiBits)
+	done:
 		rts
+	}
+
+// 	update:{
+// 		lda DirectionY
+// 		bne toDown
+// 		inc PosY
+// 		jmp movSpriteY
+// 	toDown:
+// 		dec PosY
+// 	movSpriteY:
+// 		mov PosY : Sprite.Positions+1
+
+// 		lda PosY
+// 		cmp #Border.BOTTOM
+// 		bne checkTopY
+// 		mov #DIRECTION_UP : DirectionY
+// 		jmp noBounceY
+
+// 	checkTopY:
+// 		cmp #Border.TOP
+// 		bne	noBounceY
+// 		mov #DIRECTION_DOWN : DirectionY
+// 	noBounceY:
+
+// // Ball horizontal movement and collision logic
+// 		lda DirectionX
+// 		bne moveLeft              // DirectionX != 0 → moving left
+// 		inc16 PosX                // move right
+// 		jmp movSpriteX
+// 	moveLeft:
+// 		dec16 PosX                // move left
+
+// // Update sprite X position registers
+// movSpriteX:
+//         mov PosX : Sprite.Positions
+//         lda PosX + 1
+//         bne checkRightX           // if high byte != 0, in right region
+//         ClearBitAt(0, Sprite.PosXHiBits)
+//         jmp checkLeftX
+
+// // Check for right wall or paddle 2 collision
+// checkRightX:
+//         TestBitAt(2, Sprite.Collisions)
+//         bne bounceRight           // if collision bit set, reflect
+
+//         SetBitAt(0, Sprite.PosXHiBits)
+
+//         // --- NEW: check direction before testing border scoring ---
+//         lda DirectionX
+//         bne checkLeftX            // if moving left, skip right-bound test
+
+//         lda PosX
+//         cmp #325-255              // low-byte when at right edge
+//         bne checkLeftX
+
+//         // Ball crossed right border → Player 1 scores
+//         inc P1Score
+//         jsr Ball.reset
+
+// // Reflect ball from right side (Player 2 paddle)
+// bounceRight:
+// 		mov #DIRECTION_LEFT : DirectionX
+//         jmp noBounceX
+
+// // Check for left wall or paddle 1 collision
+// checkLeftX:
+//         TestBitAt(1, Sprite.Collisions)
+//         bne bounceLeft           // if collision bit set, reflect
+
+//         lda PosX
+//         cmp #Border.LEFT
+//         bne noBounceX
+
+//         // --- NEW: check direction before testing border scoring ---
+//         lda DirectionX
+//         beq noBounceX             // if moving right, skip left-bound test
+
+//         // Ball crossed left border → Player 2 scores
+//         inc P2Score
+//         jsr Ball.reset
+// bounceLeft:
+//         mov #DIRECTION_RIGHT : DirectionX                    // change dir → right
+
+// // End of horizontal movement update
+// noBounceX:
+//         mov P1Score : Screen.Content + 10
+//         mov P2Score : Screen.Content + 30
+//         rts
+
+// 	}
 }
+
+P1Score: .byte '0'
+P2Score: .byte '0'
 
 UpdatePlayers:
 {
@@ -160,12 +247,12 @@ joyEnd:
 *=SPRITES_ADDRESS "Sprites"
 Sprites:{
 Ball:
-.byte  $00, $00, $00, $00, $00, $00, $00, $0c, $00, $00, $18
-.byte  $00, $00, $38, $00, $01, $ff, $00, $02, $fe, $80, $06
-.byte  $7c, $c0, $0f, $ef, $e0, $0d, $c7, $60, $0c, $fe, $60
-.byte  $0c, $00, $60, $06, $00, $c0, $03, $01, $80, $01, $ff
-.byte  $00, $00, $7c, $00, $00, $00, $00, $00, $00, $00, $00
-.byte  $00, $00, $00, $00, $00, $00, $00, $00, $07
+.byte $00, $00, $00, $00, $00, $00, $00, $0c, $00, $00, $18
+.byte $00, $00, $38, $00, $01, $ff, $00, $02, $fe, $80, $06
+.byte $7c, $c0, $0f, $ef, $e0, $0d, $c7, $60, $0c, $fe, $60
+.byte $0c, $00, $60, $06, $00, $c0, $03, $01, $80, $01, $ff
+.byte $00, $00, $7c, $00, $00, $00, $00, $00, $00, $00, $00
+.byte $00, $00, $00, $00, $00, $00, $00, $00, $07
 
 Bat:
 .byte $00, $28, $00, $00, $28, $00, $00, $28, $00, $00, $28
