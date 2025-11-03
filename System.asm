@@ -39,8 +39,7 @@ irq:
 // delayLoop:
 //     inx
 //     bne delayLoop
-	jsr UpdatePlayers
-	jsr Ball.update
+    jsr GameUpdate
 
     inc $d020
     jmp $ea81 // KERNAL interrupt return rouHne

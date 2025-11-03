@@ -89,3 +89,19 @@ skip:
     sbc _16bitnextArgument(arg2)
     sta _16bitnextArgument(tar)
 }
+
+.pseudocommand add8 arg1 : arg2 : tar {
+    .if (tar.getType()==AT_NONE) .eval tar=arg1
+    clc
+    lda arg1
+    adc arg2
+    sta tar
+}
+
+.pseudocommand sub8 arg1 : arg2 : tar {
+    .if (tar.getType()==AT_NONE) .eval tar=arg1
+    sec
+    lda arg1
+    sbc arg2
+    sta tar
+}

@@ -53,6 +53,11 @@ main:
 loop:
 	jmp loop
 
+GameUpdate:
+	jsr UpdatePlayers
+	jsr Ball.update
+	rts
+
 Ball:{
 	.label DIRECTION_RIGHT = 0
 	.label DIRECTION_LEFT = 1
@@ -76,16 +81,10 @@ Ball:{
 	update:{
 		lda DirectionY
 		bne stepDown
-		lda PosY
-        clc
-        adc #Speed
-        sta PosY
+		add8 PosY : #Speed
 		jmp checkBottomEdge
 	stepDown:
-		lda PosY
-		sec
-		sbc #Speed
-		sta PosY
+		sub8 PosY : #Speed
 	checkBottomEdge:
 		lda PosY
 		cmp #Border.BOTTOM
@@ -103,19 +102,19 @@ Ball:{
 		TestBitAt(2, Sprite.Collisions)	// check collision with right bat
 		beq stepRight
 		mov #DIRECTION_LEFT : DirectionX	// change dir to left
-		dec16 PosX						// <==
+		sub16 PosX : #Speed
 		jmp updateSprite
 	stepRight:
-		inc16 PosX						// ==>
+		add16 PosX : #Speed
 		jmp checkRightEdge
 	checkLeftBat:
 		TestBitAt(1, Sprite.Collisions)	// check collision with left bat
 		beq stepLeft
 		mov #DIRECTION_RIGHT : DirectionX
-		inc16 PosX						// ==>
+		add16 PosX : #Speed
 		jmp updateSprite
 	stepLeft:
-		dec16 PosX						// <==
+		sub16 PosX : #Speed
 		jmp checkLeftEdge
 	checkRightEdge:
 		TestBitAt(0, Sprite.PosXHiBits)
@@ -124,7 +123,7 @@ Ball:{
 		cmp #325-255					// low-byte when at right edge
 		bne updateSprite
 		inc P1Score
-		mov #4 : FlashFrames            // flash for next x frames
+		mov #3 : FlashFrames            // flash for next x frames
 		jsr Ball.reset
 		jmp updateSprite
 	checkLeftEdge:
@@ -134,7 +133,7 @@ Ball:{
 		cmp #Border.LEFT
 		bne updateSprite
 		inc P2Score
-		mov #4 : FlashFrames            // flash for next x frames
+		mov #3 : FlashFrames            // flash for next x frames
 		jsr Ball.reset
 	updateSprite:
 		mov PosY : Sprite.Positions + 1
