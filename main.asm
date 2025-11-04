@@ -37,14 +37,12 @@ main:
 	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMono, SpriteExpandNo, false)
 	SpriteActivate(P1.SpriteNr, Sprites.Bat, GREEN, SpriteColorMulti, SpriteExpandY, false)
 	SpriteActivate(P2.SpriteNr, Sprites.Bat, PURPLE, SpriteColorMulti, SpriteExpandY, false)
-
-	// SpritePosition(0, 20, 48) // top left
-	// SpritePosition(0, 20, 234) // bottom left
-	// SpritePosition(0, 325, 48) // top right
-	// SpritePosition(0, 325, 234) // top right
 	SpritePosition(0, 170, 138) // middle
 	SpritePosition(1, 19, 255/2)
 	SpritePosition(2, 326, 255/2)
+	ClearBitAt(0, Sprite.Active)
+	ClearBitAt(1, Sprite.Active)
+	ClearBitAt(2, Sprite.Active)
 
 	jsr Ball.reset
 
@@ -53,7 +51,57 @@ main:
 loop:
 	jmp loop
 
+ShowIntro:{
+        ldx #0
+printChar:
+        lda IntroMessage,X
+        beq End
+		sta Screen.Content+494,X
+        inx
+        jmp printChar
+End:
+		rts
+}
+
+DeleteIntro: {
+        ldx #0
+printChar:
+        lda IntroMessageDel,X
+        beq End
+		sta Screen.Content+494,X
+        inx
+        jmp printChar
+End:
+		rts
+}
+
+.label GAME_INTRO = 0
+.label GAME_PLAYING = 1
+.label GAME_OVER = 2
+gameState: .byte GAME_INTRO
+
 GameUpdate:
+	lda gameState
+	beq GameIntro
+	cmp #GAME_PLAYING
+	beq GamePlaying
+GameOver:
+	rts
+
+GameIntro:
+	jsr ShowIntro
+	JoystickFire(P1.JoystickPort)
+	bne waitForStart
+	jsr DeleteIntro
+	mov #GAME_PLAYING : gameState
+	SetBitAt(0, Sprite.Active)
+	SetBitAt(1, Sprite.Active)
+	SetBitAt(2, Sprite.Active)
+	
+waitForStart:
+	rts
+
+GamePlaying:
 	jsr UpdatePlayers
 	jsr Ball.update
 	rts
@@ -124,6 +172,7 @@ Ball:{
 		bne updateSprite
 		inc P1Score
 		mov #3 : FlashFrames            // flash for next x frames
+		mov #DIRECTION_LEFT : DirectionX	// change dir to left
 		jsr Ball.reset
 		jmp updateSprite
 	checkLeftEdge:
@@ -134,6 +183,7 @@ Ball:{
 		bne updateSprite
 		inc P2Score
 		mov #3 : FlashFrames            // flash for next x frames
+		mov #DIRECTION_RIGHT : DirectionX
 		jsr Ball.reset
 	updateSprite:
 		mov PosY : Sprite.Positions + 1
@@ -187,6 +237,12 @@ joyEnd:
 	rts
 }
 
+IntroMessage:
+	.text "insert coin"
+    .byte $00
+IntroMessageDel:
+	.text "           "
+    .byte $00
 
 *=SPRITES_ADDRESS "Sprites"
 Sprites:{
