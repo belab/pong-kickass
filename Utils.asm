@@ -29,6 +29,12 @@
     and #(1 << nr)
 }
 
+.macro ToggleBitAt(nr, addr) {
+    lda #(1 << nr)
+    and addr
+    sta addr
+}
+
 .function _16bitnextArgument(arg) {
     .if (arg.getType()==AT_IMMEDIATE)
         .return CmdArgument(arg.getType(),>arg.getValue())
@@ -65,7 +71,7 @@ over:
     bne skip
     dec _16bitnextArgument(arg)
 skip:
-    dec arg    
+    dec arg
 }
 
 .pseudocommand add16 arg1 : arg2 : tar {

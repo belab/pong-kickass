@@ -25,13 +25,13 @@
 BasicUpstart2(main)
 
 *=GAME_CODE_ADDRESS "Game Code"
-main:
+main:{
     mov #DARK_GRAY : Screen.BorderColor
     mov #BLACK : Screen.BackgroundColor
 
 	jsr Kernal.CLRSCR
 
-    mov #WHITE : Sprite.MultiColor1
+    mov #LIGHT_GREY : Sprite.MultiColor1
     mov #RED : Sprite.MultiColor2
 
 	SpriteActivate(0, Sprites.Ball, YELLOW, SpriteColorMono, SpriteExpandNo, false)
@@ -44,35 +44,12 @@ main:
 	ClearBitAt(1, Sprite.Active)
 	ClearBitAt(2, Sprite.Active)
 
-	jsr Ball.reset
-
+	jsr SwitchToIntro
+	// jsr SwitchToPlay
 	jsr System.setupRasterInterrupt
 
 loop:
 	jmp loop
-
-ShowIntro:{
-        ldx #0
-printChar:
-        lda IntroMessage,X
-        beq End
-		sta Screen.Content+494,X
-        inx
-        jmp printChar
-End:
-		rts
-}
-
-DeleteIntro: {
-        ldx #0
-printChar:
-        lda IntroMessageDel,X
-        beq End
-		sta Screen.Content+494,X
-        inx
-        jmp printChar
-End:
-		rts
 }
 
 .label GAME_INTRO = 0
@@ -80,31 +57,72 @@ End:
 .label GAME_OVER = 2
 gameState: .byte GAME_INTRO
 
-GameUpdate:
+SwitchToIntro:{
+	print(IntroMessage,14,12,GREY)
+	mov #GAME_INTRO : gameState
+	rts
+}
+
+SwitchToPlay:{
+	clear(IntroMessage,14,12)
+	jsr Ball.reset
+	mov #GAME_PLAYING : gameState
+	mov #'0' : P1Score
+	mov #'0' : P2Score
+	SetBitAt(0, Sprite.Active)
+	SetBitAt(1, Sprite.Active)
+	SetBitAt(2, Sprite.Active)
+	rts
+}
+
+SwitchToGameOver:{
+	print(GameOverMessage,14,12,GREY)
+	mov #GAME_OVER : gameState
+	mov #' ' : Screen.Content + 10
+	mov #' ' : Screen.Content + 30
+	ClearBitAt(0, Sprite.Active)
+	ClearBitAt(1, Sprite.Active)
+	ClearBitAt(2, Sprite.Active)
+	mov #100 : FrameCountdown            // wait for next x frames
+	rts
+}
+
+WaitForGameStart:{
+	JoystickFire(P1.JoystickPort)
+	bne waitForStart
+	jsr SwitchToPlay
+waitForStart:
+	rts
+}
+
+GameUpdate:{
 	lda gameState
 	beq GameIntro
 	cmp #GAME_PLAYING
 	beq GamePlaying
-GameOver:
-	rts
+	jmp GameOver
 
 GameIntro:
-	jsr ShowIntro
-	JoystickFire(P1.JoystickPort)
-	bne waitForStart
-	jsr DeleteIntro
-	mov #GAME_PLAYING : gameState
-	SetBitAt(0, Sprite.Active)
-	SetBitAt(1, Sprite.Active)
-	SetBitAt(2, Sprite.Active)
-	
-waitForStart:
+	jsr WaitForGameStart
 	rts
+
+GameOver:
+	lda FrameCountdown
+	beq GameOverFinished
+	dec FrameCountdown                  // consume one frame, keep flash this frame
+	rts
+GameOverFinished:
+	clear(GameOverMessage,14,12)
+	jsr SwitchToIntro
+	rts
+
 
 GamePlaying:
 	jsr UpdatePlayers
 	jsr Ball.update
 	rts
+
+}
 
 Ball:{
 	.label DIRECTION_RIGHT = 0
@@ -170,9 +188,16 @@ Ball:{
 		lda PosX
 		cmp #325-255					// low-byte when at right edge
 		bne updateSprite
+		lda P1Score
+		cmp #'0'+3
+		bne scoreP1
+		jsr SwitchToGameOver
+		rts
+
+	scoreP1:
 		inc P1Score
-		mov #3 : FlashFrames            // flash for next x frames
-		mov #DIRECTION_LEFT : DirectionX	// change dir to left
+		mov #2 : FrameCountdown			// flash for next x frames
+		mov #DIRECTION_LEFT : DirectionX
 		jsr Ball.reset
 		jmp updateSprite
 	checkLeftEdge:
@@ -181,8 +206,14 @@ Ball:{
 		lda PosX
 		cmp #Border.LEFT
 		bne updateSprite
+		lda P2Score
+		cmp #'0'+3
+		bne scoreP2
+		jsr SwitchToGameOver
+		rts
+	scoreP2:
 		inc P2Score
-		mov #3 : FlashFrames            // flash for next x frames
+		mov #2 : FrameCountdown            // flash for next x frames
 		mov #DIRECTION_RIGHT : DirectionX
 		jsr Ball.reset
 	updateSprite:
@@ -196,9 +227,9 @@ Ball:{
 		SetBitAt(0, Sprite.PosXHiBits)
 	done:
 		// handle border flash counter per-frame
-		lda FlashFrames
+		lda FrameCountdown
 		beq noFlash
-		dec FlashFrames                  // consume one frame, keep flash this frame
+		dec FrameCountdown                  // consume one frame, keep flash this frame
 		inc Screen.BorderColor
 		jmp flashDone
 	noFlash:
@@ -209,7 +240,7 @@ Ball:{
 		rts
 	}
 }
-FlashFrames: .byte 0
+FrameCountdown: .byte 0
 P1Score: .byte '0'
 P2Score: .byte '0'
 
@@ -240,9 +271,11 @@ joyEnd:
 IntroMessage:
 	.text "insert coin"
     .byte $00
-IntroMessageDel:
-	.text "           "
+
+GameOverMessage:
+	.text "game over"
     .byte $00
+
 
 *=SPRITES_ADDRESS "Sprites"
 Sprites:{
