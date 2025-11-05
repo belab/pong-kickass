@@ -76,7 +76,7 @@ SwitchToPlay:{
 }
 
 SwitchToGameOver:{
-	print(GameOverMessage,14,12,GREY)
+	print(GameOverMessage,16,12,GREY)
 	mov #GAME_OVER : gameState
 	mov #' ' : Screen.Content + 10
 	mov #' ' : Screen.Content + 30
@@ -112,7 +112,7 @@ GameOver:
 	dec FrameCountdown                  // consume one frame, keep flash this frame
 	rts
 GameOverFinished:
-	clear(GameOverMessage,14,12)
+	clear(GameOverMessage,16,12)
 	jsr SwitchToIntro
 	rts
 
