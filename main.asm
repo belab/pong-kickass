@@ -6,6 +6,7 @@
 #import "Screen.asm"
 #import "Joystick.asm"
 #import "System.asm"
+#import "Sound.asm"
 
 .struct Player{
 	JoystickPort,
@@ -43,6 +44,11 @@ main:{
 	ClearBitAt(0, Sprite.Active)
 	ClearBitAt(1, Sprite.Active)
 	ClearBitAt(2, Sprite.Active)
+
+	//initSid:
+	lda #$0f           // master volume 15
+	sta $d418
+
 
 	jsr SwitchToIntro
 	// jsr SwitchToPlay
@@ -83,7 +89,7 @@ SwitchToGameOver:{
 	ClearBitAt(0, Sprite.Active)
 	ClearBitAt(1, Sprite.Active)
 	ClearBitAt(2, Sprite.Active)
-	mov #100 : FrameCountdown            // wait for next x frames
+	mov #200 : FrameCountdown            // wait for next x frames
 	rts
 }
 
@@ -96,6 +102,7 @@ waitForStart:
 }
 
 GameUpdate:{
+	jsr updateSoundHold
 	lda gameState
 	beq GameIntro
 	cmp #GAME_PLAYING
@@ -155,11 +162,17 @@ Ball:{
 		lda PosY
 		cmp #Border.BOTTOM
 		bne checkTopEdge
+		ldx #0
+		ldy #5
+		jsr bounceSound
 		mov #DIRECTION_UP : DirectionY
 		jmp moveHorizontal
 	checkTopEdge:
 		cmp #Border.TOP
 		bne	moveHorizontal
+		ldx #0
+		ldy #5
+		jsr bounceSound
 		mov #DIRECTION_DOWN : DirectionY
 
 	moveHorizontal:
@@ -167,6 +180,9 @@ Ball:{
 		bne checkLeftBat
 		TestBitAt(2, Sprite.Collisions)	// check collision with right bat
 		beq stepRight
+		ldx #0
+		ldy #6
+		jsr bounceSound
 		mov #DIRECTION_LEFT : DirectionX	// change dir to left
 		sub16 PosX : #Speed
 		jmp updateSprite
@@ -176,6 +192,9 @@ Ball:{
 	checkLeftBat:
 		TestBitAt(1, Sprite.Collisions)	// check collision with left bat
 		beq stepLeft
+		ldx #0
+		ldy #6
+		jsr bounceSound
 		mov #DIRECTION_RIGHT : DirectionX
 		add16 PosX : #Speed
 		jmp updateSprite
@@ -188,6 +207,7 @@ Ball:{
 		lda PosX
 		cmp #325-255					// low-byte when at right edge
 		bne updateSprite
+		jsr noiseSound
 		lda P1Score
 		cmp #'0'+3
 		bne scoreP1
@@ -206,6 +226,7 @@ Ball:{
 		lda PosX
 		cmp #Border.LEFT
 		bne updateSprite
+		jsr noiseSound
 		lda P2Score
 		cmp #'0'+3
 		bne scoreP2
