@@ -45,10 +45,7 @@ main:{
 	ClearBitAt(1, Sprite.Active)
 	ClearBitAt(2, Sprite.Active)
 
-	//initSid:
-	lda #$0f           // master volume 15
-	sta $d418
-
+	SoundInit($0f)
 
 	jsr SwitchToIntro
 	// jsr SwitchToPlay
@@ -102,7 +99,7 @@ waitForStart:
 }
 
 GameUpdate:{
-	jsr updateSoundHold
+	jsr Sound.hold
 	lda gameState
 	beq GameIntro
 	cmp #GAME_PLAYING
@@ -164,7 +161,7 @@ Ball:{
 		bne checkTopEdge
 		ldx #0
 		ldy #5
-		jsr bounceSound
+		jsr Sound.bounce
 		mov #DIRECTION_UP : DirectionY
 		jmp moveHorizontal
 	checkTopEdge:
@@ -172,7 +169,7 @@ Ball:{
 		bne	moveHorizontal
 		ldx #0
 		ldy #5
-		jsr bounceSound
+		jsr Sound.bounce
 		mov #DIRECTION_DOWN : DirectionY
 
 	moveHorizontal:
@@ -182,7 +179,7 @@ Ball:{
 		beq stepRight
 		ldx #0
 		ldy #6
-		jsr bounceSound
+		jsr Sound.bounce
 		mov #DIRECTION_LEFT : DirectionX	// change dir to left
 		sub16 PosX : #Speed
 		jmp updateSprite
@@ -194,7 +191,7 @@ Ball:{
 		beq stepLeft
 		ldx #0
 		ldy #6
-		jsr bounceSound
+		jsr Sound.bounce
 		mov #DIRECTION_RIGHT : DirectionX
 		add16 PosX : #Speed
 		jmp updateSprite
@@ -207,7 +204,7 @@ Ball:{
 		lda PosX
 		cmp #325-255					// low-byte when at right edge
 		bne updateSprite
-		jsr noiseSound
+		jsr Sound.noise
 		lda P1Score
 		cmp #'0'+3
 		bne scoreP1
@@ -226,7 +223,7 @@ Ball:{
 		lda PosX
 		cmp #Border.LEFT
 		bne updateSprite
-		jsr noiseSound
+		jsr Sound.noise
 		lda P2Score
 		cmp #'0'+3
 		bne scoreP2

@@ -1,55 +1,63 @@
 #importonce
+#import "Utils.asm"
 
-updateSoundHold:
-    dec SoundHoldTime
-    bne done
-    lda #$10           // Gate off + Triangle waveform
-    sta $d404
-done:
-    rts
 
-// -----------------------
+// param vol max = $0f
+.macro SoundInit(vol) {
+    lda #(vol & $0f)
+    sta Sound.Volume
+}
+
+.namespace Sound {
+    .label Volume = $d418
+    .label Freq1L = $d400
+    .label Freq1H = $d401
+    .label AtkDecy1 = $d405
+    .label SusRel1 = $d406
+    .label Freq2L = $d407
+    .label Freq2H = $d408
+    .label Wave2 = $d40b // NOISE = 129;RECT = 65; SAW = 33; TRI = 17
+    .label AtkDecy2 = $d40c
+    .label SusRel2 = $d40d
+    .label Wave1GateOn = $d404
+
+    hold:{
+        dec HoldTime
+        bne done
+        mov #$10 : Wave1GateOn       // Gate off
+    done:
+        rts
+    }
+
 // =====================================================
 // RetriggerVoice1
 // Stops any current sound and immediately starts new one
 // X/Y: new frequency (lo/hi) e.g. 0, 5
 // =====================================================
-bounceSound:
+bounce:
     txa
-    sta $d400          // freq low byte
+    sta Freq1L           // freq low byte
     tya
-    sta $d401          // freq high byte
+    sta Freq1H           // freq high byte
 
-    lda #$09
-    sta $d405          // Attack=0, Decay=0
-    lda #$f9
-    sta $d406          // Sustain=max, Release=0
+    mov #$09 : AtkDecy1     // Attack=0, Decay=0
+    mov #$f9 : SusRel1      // Sustain=max, Release=0
+    mov #$11 : Wave1GateOn   // Gate on + Triangle waveform
 
-
-    lda #$11           // Gate on + Triangle waveform
-    sta $d404
-
-    lda #5
-    sta SoundHoldTime
+    mov #5 : HoldTime
     rts
 
-noiseSound:
-    lda #5
-    sta $d400          // freq low byte
-    lda #1
-    sta $d401          // freq high byte
+noise:
+    mov #5 : Freq1L
+    mov #1 : Freq1H
+    mov #$15 : AtkDecy1
+    mov #$5b : SusRel1
+    mov #$81 : Wave1GateOn   // Gate on + noise waveform
 
-    lda #$15
-    sta $d405          // Attack=0, Decay=0
-    lda #$5b
-    sta $d406          // Sustain=max, Release=0
-
-
-    lda #$81           // Gate on + noise waveform
-    sta $d404
-
-    lda #30
-    sta SoundHoldTime
+    mov #30 : HoldTime
     rts
 
-SoundHoldTime: .byte 5
+HoldTime: .byte 5
+}
+
+
