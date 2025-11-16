@@ -10,6 +10,7 @@
 
 .namespace Sound {
     .label Volume = $d418
+    .label Freq1 = $d400
     .label Freq1L = $d400
     .label Freq1H = $d401
     .label AtkDecy1 = $d405

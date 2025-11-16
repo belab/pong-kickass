@@ -45,3 +45,4 @@ irq:
     jmp $ea81 // KERNAL interrupt return rouHne
 // ------------ Interrupt rouHne END --------------------
 
+IrqUpate: .word  0
