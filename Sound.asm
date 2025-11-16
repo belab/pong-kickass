@@ -15,6 +15,7 @@
     .label Freq1H = $d401
     .label AtkDecy1 = $d405
     .label SusRel1 = $d406
+    .label Freq2 = $d407
     .label Freq2L = $d407
     .label Freq2H = $d408
     .label Wave2 = $d40b // NOISE = 129;RECT = 65; SAW = 33; TRI = 17
