@@ -43,9 +43,9 @@ PlayMusic:
 !:	sta Sound.Freq2L
 	mov Song.NotesH,x : Sound.Freq2H
 
-    mov #$09 : Sound.AtkDecy2     // Attack=0, Decay=0
-    mov #$f9 : Sound.SusRel2      // Sustain=max, Release=0
-    mov #$11 : Sound.Wave2        // Triangle waveform
+    mov #$00 : Sound.AtkDecy2     // Attack=0, Decay=0
+    mov #$39 : Sound.SusRel2      // Sustain=max, Release=0
+    mov #$51 : Sound.Wave2        // Triangle waveform
     mov #40 : FrameCountdown
 done:
     rts
