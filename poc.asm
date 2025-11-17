@@ -9,6 +9,7 @@ BasicUpstart2(next)
 
 next:
 	SoundInit($0f)
+	mov #1 : Playing
 	mov #$10 : Sound.Wave1GateOn       // Gate off
 	jsr System.setupRasterInterrupt
 
@@ -29,19 +30,22 @@ GameUpdate:{
 }
 
 PlayMusic:
+	lda Playing
+	beq done
 	dec FrameCountdown
 	bne done
     ldx CurrentNote
 	inc CurrentNote
 
-	lda Song.NotesL,x
+	lda Song2.NotesL,x
 	cmp #$FF
 	bne !+
+	mov #0 : Playing
 	mov #0 : CurrentNote
-	ldx #0
-	lda Song.NotesL
+	mov #$00 : Sound.Wave2
+	rts
 !:	sta Sound.Freq2L
-	mov Song.NotesH,x : Sound.Freq2H
+	mov Song2.NotesH,x : Sound.Freq2H
 
     mov #$00 : Sound.AtkDecy2     // Attack=0, Decay=0
     mov #$39 : Sound.SusRel2      // Sustain=max, Release=0
@@ -52,10 +56,10 @@ done:
 
 CurrentNote: .byte 0
 FrameCountdown: .byte 5
+Playing: .byte 0
+// Song2: .byte $04, $05, $06, $05, $05, $06, $06, $FF
 
-// Song: .byte $04, $05, $06, $05, $05, $06, $06, $FF
-
-Song: {
+Song2: {
 	NotesH: .byte $04, $04, $04, $05, $04, $06, $06, $06, $06, $FF
 	NotesL: .byte $54, $54, $54, $26, $dc, $df, $df, $7c, $7c, $FF
 }

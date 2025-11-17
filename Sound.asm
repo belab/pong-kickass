@@ -31,6 +31,43 @@
         rts
     }
 
+    StopMusic:{
+        lda #$00
+        sta PlayMusic.CurrentNote
+        sta PlayMusic.Playing
+        sta Wave2
+        rts
+    }
+
+    PlayMusic:{
+    	lda Playing
+        beq done
+        dec FrameCountdown
+        bne done
+        ldx CurrentNote
+        inc CurrentNote
+
+        lda Song.NotesL,x
+        cmp #$FF
+        bne !+
+        jsr StopMusic
+        rts
+    !:	sta Sound.Freq2L
+        mov Song.NotesH,x : Sound.Freq2H
+
+        mov #$00 : Sound.AtkDecy2     // Attack=0, Decay=0
+        mov #$19 : Sound.SusRel2      // Sustain=max, Release=0
+        mov #$51 : Sound.Wave2        // Triangle waveform
+        mov #40 : FrameCountdown
+    done:
+        rts
+
+    CurrentNote: .byte 0
+    FrameCountdown: .byte 5        
+    Playing: .byte 0
+
+    }
+
 // =====================================================
 // RetriggerVoice1
 // Stops any current sound and immediately starts new one
@@ -63,3 +100,7 @@ HoldTime: .byte 5
 }
 
 
+Song: {
+	NotesH: .byte $04, $04, $04, $05, $04, $06, $06, $06, $06, $FF
+	NotesL: .byte $54, $54, $54, $26, $dc, $df, $df, $7c, $7c, $FF
+}

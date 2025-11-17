@@ -63,10 +63,12 @@ gameState: .byte GAME_INTRO
 SwitchToIntro:{
 	print(IntroMessage,14,12,GREY)
 	mov #GAME_INTRO : gameState
+	mov #1 : Sound.PlayMusic.Playing
 	rts
 }
 
 SwitchToPlay:{
+	jsr Sound.StopMusic
 	clear(IntroMessage,14,12)
 	jsr Ball.reset
 	mov #GAME_PLAYING : gameState
@@ -108,6 +110,7 @@ GameUpdate:{
 
 GameIntro:
 	jsr WaitForGameStart
+	jsr Sound.PlayMusic
 	rts
 
 GameOver:
